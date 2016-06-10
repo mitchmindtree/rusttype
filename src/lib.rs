@@ -349,7 +349,7 @@ impl<'a> Font<'a> {
     /// # use rusttype::*;
     /// # let (scale, start) = (Scale::uniform(0.0), point(0.0, 0.0));
     /// # let font: Font = unimplemented!();
-    /// font.layout("Hello World!", scale, start)
+    /// font.layout("Hello World!".chars(), scale, start)
     /// # ;
     /// ```
     ///
@@ -371,10 +371,12 @@ impl<'a> Font<'a> {
     ///     })
     /// # ;
     /// ```
-    pub fn layout<'b, 'c>(&'b self, s: &'c str, scale: Scale, start: Point<f32>) -> LayoutIter<'b, 'c> {
+    pub fn layout<I>(&self, chars: I, scale: Scale, start: Point<f32>) -> LayoutIter<I::IntoIter>
+        where I: IntoIterator<Item=char>,
+    {
         LayoutIter {
             font: self,
-            chars: s.chars(),
+            chars: chars.into_iter(),
             caret: 0.0,
             scale: scale,
             start: start,
@@ -401,15 +403,17 @@ impl<'a, I: Iterator> Iterator for GlyphIter<'a, I> where I::Item: Into<Codepoin
         self.itr.next().map(|c| self.font.glyph(c).unwrap())
     }
 }
-pub struct LayoutIter<'a, 'b> {
+pub struct LayoutIter<'a, I> {
     font: &'a Font<'a>,
-    chars: ::std::str::Chars<'b>,
+    chars: I,
     caret: f32,
     scale: Scale,
     start: Point<f32>,
     last_glyph: Option<GlyphId>
 }
-impl<'a, 'b> Iterator for LayoutIter<'a, 'b> {
+impl<'a, I> Iterator for LayoutIter<'a, I>
+    where I: Iterator<Item=char>,
+{
     type Item = PositionedGlyph<'a>;
     fn next(&mut self) -> Option<PositionedGlyph<'a>> {
         self.chars.next().map(|c| {

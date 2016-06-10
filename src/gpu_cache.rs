@@ -579,7 +579,8 @@ fn cache_test() {
             ];
     for i in 0..strings.len() {
         println!("Caching {:?}", strings[i]);
-        for glyph in font.layout(strings[i].0, Scale { x: strings[i].1, y: strings[i].1 }, point(0.0, 0.0)) {
+        let scale = Scale { x: strings[i].1, y: strings[i].1 };
+        for glyph in font.layout(strings[i].0.chars(), scale, point(0.0, 0.0)) {
             cache.queue_glyph(0, glyph);
         }
         cache.cache_queued(|_, _| {}).unwrap();
